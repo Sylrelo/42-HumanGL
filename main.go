@@ -110,6 +110,34 @@ type Node struct {
 }
 
 func generateHumanBody (body [10]BodyConfig) *Node {
+
+	rightLowerLeg := Node {
+		bodyPart: RLLEG,
+		children: nil,
+	}
+	rightLowerLeg.transform = mgl32.Translate3D(0, body[RULEG].size.y, 0)
+
+	rightUpperLeg := Node {
+		bodyPart: RULEG,
+		children: []Node{ rightLowerLeg },
+	}
+	rightUpperLeg.transform = mgl32.Translate3D((body[TORSO].size.x * .5 - body[RULEG].size.x * .5), 0, body[TORSO].size.z * .5)
+	rightUpperLeg.transform = rightUpperLeg.transform.Mul4(mgl32.HomogRotate3DX(body[RULEG].rotation.x))
+
+
+	leftLowerLeg := Node {
+		bodyPart: LLLEG,
+		children: nil,
+	}
+	leftLowerLeg.transform = mgl32.Translate3D(0, body[LULEG].size.y, 0)
+
+	leftUpperLeg := Node {
+		bodyPart: LULEG,
+		children: []Node{leftLowerLeg},
+	}
+	leftUpperLeg.transform = mgl32.Translate3D(-(body[TORSO].size.x * .5 - body[LULEG].size.x * .5), 0, body[TORSO].size.z * .5)
+	leftUpperLeg.transform = leftUpperLeg.transform.Mul4(mgl32.HomogRotate3DX(body[LULEG].rotation.x))
+
 	matLeftLowerArm := mgl32.Translate3D(0, body[LUARM].size.y, 0)
 	matLeftLowerArm = matLeftLowerArm.Mul4(mgl32.HomogRotate3DX(body[LLARM].rotation.x))
 	leftLowerArm := Node{
@@ -145,8 +173,6 @@ func generateHumanBody (body [10]BodyConfig) *Node {
 		children: []Node{rightLowerArm},
 	}
 
-	// matHead := mgl32.Translate3D(0, body[TORSO].size.y + body[HEAD].size.y * 0.5, 0)
-	// matHead = matHead.Mul4(mgl32.Translate3D(0,-body[HEAD].size.y * 0.5, 0))
 	matHead := mgl32.Translate3D(0, body[TORSO].size.y, 0)
 	head := Node {
 		transform: matHead,
@@ -160,7 +186,7 @@ func generateHumanBody (body [10]BodyConfig) *Node {
 	torso := Node {
 		transform: matTorso,
 		bodyPart: TORSO,
-		children: []Node{ head, rightUpperArm, leftUpperArm},
+		children: []Node{ head, rightUpperArm, leftUpperArm, leftUpperLeg, rightUpperLeg},
 	}
 
 	return &torso
@@ -168,33 +194,29 @@ func generateHumanBody (body [10]BodyConfig) *Node {
 
 func translateBackBodypart(modelMat mgl32.Mat4, bodyConfig BodyConfig) mgl32.Mat4 {
 	instanceMat := modelMat.Mul4(mgl32.Translate3D(0, bodyConfig.size.y * 0.5, 0))
-	instanceMat = instanceMat.Mul4(mgl32.Scale3D(bodyConfig.size.x, bodyConfig.size.y, 1))
+	instanceMat = instanceMat.Mul4(mgl32.Scale3D(bodyConfig.size.x, bodyConfig.size.y, bodyConfig.size.z))
 	return instanceMat
 }
 
-func iterateChildrens(modelUniform int32, node *Node, bodyConfig [10]BodyConfig, stackedMat mgl32.Mat4) {
-	modelMat := stackedMat
-	instanceMat := mgl32.Ident4()
-
+func iterateChildrens(modelUniform int32, node *Node, bodyConfig [10]BodyConfig, matModel mgl32.Mat4) {
 	if node == nil {
 		return
 	}
-	modelMat = modelMat.Mul4(node.transform)
+	matInstance := mgl32.Ident4()
+	matModel = matModel.Mul4(node.transform)
 
 	if node.bodyPart == TORSO {
-		instanceMat = modelMat.Mul4(mgl32.Translate3D(0, bodyConfig[TORSO].size.y * 0.5, bodyConfig[TORSO].size.z * 0.5))
-		instanceMat = instanceMat.Mul4(mgl32.Scale3D(bodyConfig[TORSO].size.x, bodyConfig[TORSO].size.y, bodyConfig[TORSO].size.z))
+		matInstance = matModel.Mul4(mgl32.Translate3D(0, bodyConfig[TORSO].size.y * 0.5, bodyConfig[TORSO].size.z * 0.5))
+		matInstance = matInstance.Mul4(mgl32.Scale3D(bodyConfig[TORSO].size.x, bodyConfig[TORSO].size.y, bodyConfig[TORSO].size.z))
 	} else {
-		instanceMat = translateBackBodypart(modelMat, bodyConfig[node.bodyPart])
-
+		matInstance = translateBackBodypart(matModel, bodyConfig[node.bodyPart])
 	}
 
-	gl.UniformMatrix4fv(modelUniform, 1, false, &instanceMat[0])
+	gl.UniformMatrix4fv(modelUniform, 1, false, &matInstance[0])
 	gl.DrawArrays(gl.TRIANGLES, 0, 36)
-
 	if node.children != nil {
 		for child := range node.children {
-			iterateChildrens(modelUniform, &node.children[child], bodyConfig, modelMat)
+			iterateChildrens(modelUniform, &node.children[child], bodyConfig, matModel)
 		}
 	}
 }
@@ -250,8 +272,8 @@ func main() {
 	bodyConfig[TORSO].size.y = 6.0
 	bodyConfig[TORSO].size.z = 2.0
 
-	bodyConfig[RUARM].size.x = 1.0
-	bodyConfig[LUARM].size.x = 1.0
+	bodyConfig[RUARM].size.x = 2.0
+	bodyConfig[LUARM].size.x = 2.0
 	bodyConfig[RLARM].size.x = 1.0
 	bodyConfig[LLARM].size.x = 1.0
 
@@ -268,13 +290,23 @@ func main() {
 	bodyConfig[LUARM].rotation.y = mgl32.DegToRad(0)
 	bodyConfig[LLARM].rotation.x = mgl32.DegToRad(0)
 
+
+	bodyConfig[LULEG].rotation.x = mgl32.DegToRad(180)
+	bodyConfig[LULEG].size.y = 3.0
+	bodyConfig[LULEG].size.x = 2.0
+	bodyConfig[LLLEG].size.y = 1.5
+
+	bodyConfig[RULEG].rotation.x = mgl32.DegToRad(180)
+	bodyConfig[RULEG].size.y = 3.0
+	bodyConfig[RULEG].size.x = 2.0
+	bodyConfig[RLLEG].size.y = 2.5
 	// os.Exit(1)
 
 
 	matProjUniform := gl.GetUniformLocation(program, gl.Str("matProjection\x00"))
 	matCameraUniform := gl.GetUniformLocation(program, gl.Str("matCamera\x00"))
 
-	matCamera := mgl32.Translate3D(0, -5, -20)	
+	matCamera := mgl32.Translate3D(0, -2, -20)	
 	matProj := mgl32.Perspective(mgl32.DegToRad(60), float32(width) / float32(height), 0.1, 100)
 
 	a := 0.0
