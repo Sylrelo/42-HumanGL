@@ -75,7 +75,21 @@ type Node struct {
 
 type DrawData struct {
 	bodyConfig [10]BodyConfig
+	bodyConfigTmp [10]BodyConfig
 	bodyColors [10]Vec3f32
 	uniformColor int32
 	uniformModel int32
+	animation Animation
+}
+
+
+type AnimationDetail struct {
+	rotation Vec3f32
+	BodyPart int
+	start int
+	end int
+}
+type Animation struct {
+	duration float32
+	keyframes []AnimationDetail
 }

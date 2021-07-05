@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	mat4 "humangl/matrice"
 
@@ -74,14 +74,13 @@ func iterateChildrens(drawData DrawData, node *Node, matModel mat4.Mat4) {
 
 func main() {
 	runtime.LockOSThread()
+	var vao uint32
+	var vbo uint32
 
 	window := initGlfw()
 	defer glfw.Terminate()
 	program := initOpenGL()
 
-
-	var vao uint32
-	var vbo uint32
 
 	glBuffer := triangle
 	gl.GenBuffers(1, &vbo)
@@ -94,7 +93,6 @@ func main() {
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
 	gl.BindVertexArray(vao)
 	gl.UseProgram(program)
-
 	gl.Enable(gl.CULL_FACE)
 	gl.Enable(gl.DEPTH_TEST)
 
@@ -109,7 +107,10 @@ func main() {
 	var drawData DrawData
 
 	drawData.bodyColors = HumanDefaultColor()
+	
 	drawData.bodyConfig = HumanDefaultConfig()
+	drawData.bodyConfigTmp = SetToZero()
+
 	drawData.uniformColor = gl.GetUniformLocation(program, gl.Str("partColor\x00"))
 	drawData.uniformModel = gl.GetUniformLocation(program, gl.Str("matModel\x00"))
 
@@ -117,8 +118,24 @@ func main() {
 	a := 0.0
 	b := 0.0
 	c := 0.0
+
+	walkingAnimation := createWalkinAnimation()
+
+	for id, keyframe := range walkingAnimation.keyframes {
+		fmt.Printf("%3d [%3d  ] [%4.1f - %4.1f ] (%4.2f, %4.2f, %4.2f)\n",
+			id,
+			keyframe.BodyPart,
+			keyframe.start,
+			keyframe.end,
+			keyframe.rotation.x,
+			keyframe.rotation.y,
+			keyframe.rotation.z,
+		)
+	}
+	gl.UniformMatrix4fv(matCameraUniform, 1, false, &matCamera[0])
+
+	frameNumber := 0
 	for !window.ShouldClose() {
-		gl.UniformMatrix4fv(matCameraUniform, 1, false, &matCamera[0])
 
 		// bodyConfig[TORSO].rotation.y = float32(math.Cos(a))
 		// bodyConfig[TORSO].size.x = 2 + float32(math.Abs(float64(float32(math.Cos(a) * 8))))
@@ -129,7 +146,7 @@ func main() {
 		// bodyConfig[LLARM].rotation.x =  -float32(math.Cos(c))
 	
 
-		draw(vao, window, program, drawData)
+		draw(vao, window, program, drawData, &frameNumber)
 
 		a += 0.005
 		b += 0.005
@@ -156,7 +173,9 @@ func initGlfw() *glfw.Window {
 	return window
 }
 
-func draw(vao uint32, window *glfw.Window, program uint32, drawData DrawData) {
+func draw(vao uint32, window *glfw.Window, program uint32, drawData DrawData, frame *int) {
+	start := time.Now()
+	// fmt.Printf("Frame: %d\n", *frame)
 
 	if glfw.GetCurrentContext().GetKey(glfw.KeyEscape) == 1 {
 		os.Exit(0)
@@ -164,19 +183,39 @@ func draw(vao uint32, window *glfw.Window, program uint32, drawData DrawData) {
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	
-	humanBody := GenerateHuman(drawData.bodyConfig)
+	walkingAnimation := createWalkinAnimation()
+	if *frame > int(walkingAnimation.duration) {
+		*frame = 0
+	}
+
+	for _, keyframe := range walkingAnimation.keyframes {
+		if *frame > keyframe.start && *frame < keyframe.end {
+			fmt.Println(keyframe)
+			fmt.Println(keyframe.rotation.x / float32(keyframe.end) * float32(*frame), keyframe.rotation.x)
+			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.x = mat4.DegToRad(keyframe.rotation.x / float32(keyframe.end) * float32(*frame))
+		}
+		if *frame > keyframe.start && *frame >= keyframe.end {
+			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.x = mat4.DegToRad(keyframe.rotation.x)
+		}
+	}
+
+
+	humanBody := GenerateHuman(drawData.bodyConfig, drawData.bodyConfigTmp)
+
 	iterateChildrens(drawData, humanBody, mat4.Identity())
 
 	glfw.PollEvents()
 	window.SwapBuffers()
+	if diff := time.Since(start).Milliseconds() - 16; diff > 0 {
+		time.Sleep(time.Duration(diff) * time.Millisecond)
+	}
+	(*frame)++
 }
 
 func initOpenGL() uint32 {
 	if err := gl.Init(); err != nil {
 		panic(err)
 	}
-	version := gl.GoStr(gl.GetString(gl.VERSION))
-	log.Println("OpenGL version", version)
 
 	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
 	if err != nil {

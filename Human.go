@@ -4,12 +4,16 @@ import (
 	mat4 "humangl/matrice"
 )
 
-func LeftLeg (body [10]BodyConfig) Node {
+func LeftLeg (body [10]BodyConfig, bodyTmp [10]BodyConfig) Node {
 	leftLowerLeg := Node {
 		bodyPart: LLLEG,
 		children: nil,
 		transform: mat4.Translate(0, body[LULEG].size.y, 0),
 	}
+	leftLowerLeg.transform = leftLowerLeg.transform.Mult(mat4.Rotation(
+		body[LLLEG].rotation.x + bodyTmp[LLLEG].rotation.x, 
+		body[LLLEG].rotation.y + bodyTmp[LLLEG].rotation.y, 
+		body[LLLEG].rotation.z + bodyTmp[LLLEG].rotation.z))
 
 	leftUpperLeg := Node {
 		bodyPart: LULEG,
@@ -21,19 +25,23 @@ func LeftLeg (body [10]BodyConfig) Node {
 		body[TORSO].size.z * .5)
 	leftUpperLeg.transform = leftUpperLeg.transform.Mult(
 		mat4.Rotation(
-			body[LULEG].rotation.x, 
+			body[LULEG].rotation.x + bodyTmp[LULEG].rotation.x, 
 			0, 
 			0))
 
 	return leftUpperLeg
 }
 
-func RightLeg (body [10]BodyConfig) Node {
+func RightLeg (body [10]BodyConfig, bodyTmp [10]BodyConfig) Node {
 	rightLowerLeg := Node {
 		bodyPart: RLLEG,
 		children: nil,
 		transform: mat4.Translate(0, body[RULEG].size.y, 0),
 	}
+	rightLowerLeg.transform = rightLowerLeg.transform.Mult(mat4.Rotation(
+		body[RLLEG].rotation.x + bodyTmp[RLLEG].rotation.x, 
+		body[RLLEG].rotation.y + bodyTmp[RLLEG].rotation.y, 
+		body[RLLEG].rotation.z + bodyTmp[RLLEG].rotation.z))
 
 	rightUpperLeg := Node {
 		bodyPart: RULEG,
@@ -45,14 +53,14 @@ func RightLeg (body [10]BodyConfig) Node {
 		body[TORSO].size.z * .5)
 	rightUpperLeg.transform = rightUpperLeg.transform.Mult(
 		mat4.Rotation(
-			body[RULEG].rotation.x, 
+			body[RULEG].rotation.x + bodyTmp[RULEG].rotation.x, 
 			0, 
 			0))
 
 	return rightUpperLeg
 }
 
-func leftArm (body [10]BodyConfig) Node {
+func leftArm (body [10]BodyConfig, bodyTmp [10]BodyConfig) Node {
 	
 	matLeftLowerArm := mat4.Translate(0, body[LUARM].size.y, 0)
 	matLeftLowerArm = matLeftLowerArm.Mult(mat4.Rotation(body[LLARM].rotation.x, 0, 0))
@@ -73,7 +81,7 @@ func leftArm (body [10]BodyConfig) Node {
 	return leftUpperArm
 }
 
-func rightArm (body [10]BodyConfig) Node {
+func rightArm (body [10]BodyConfig, bodyTmp [10]BodyConfig) Node {
 	matRightLowerArm := mat4.Translate(0, body[RUARM].size.y, 0)
 	matRightLowerArm = matRightLowerArm.Mult(mat4.Rotation(body[RLARM].rotation.x, 0, 0))
 	rightLowerArm := Node{
@@ -93,13 +101,13 @@ func rightArm (body [10]BodyConfig) Node {
 	return rightUpperArm
 }
 
-func GenerateHuman(body [10]BodyConfig) *Node {
-	leftLeg := LeftLeg(body)
-	rightLeg := RightLeg(body)
-	rightArm := rightArm(body)
-	LeftArm := leftArm(body)
+func GenerateHuman(body [10]BodyConfig, bodyTmp [10]BodyConfig) *Node {
+	leftLeg := LeftLeg(body, bodyTmp)
+	rightLeg := RightLeg(body, bodyTmp)
+	rightArm := rightArm(body, bodyTmp)
+	LeftArm := leftArm(body, bodyTmp)
 
-	matHead := mat4.Translate(0, body[TORSO].size.y, 0)
+	matHead := mat4.Translate(0, body[TORSO].size.y, body[HEAD].size.z * .5)
 	head := Node {
 		transform: matHead,
 		bodyPart: HEAD,
@@ -126,7 +134,28 @@ func HumanDefaultColor() [10]Vec3f32 {
 	bodyColors[TORSO] = Vec3f32{0.4, 0.0, 0.0}
 	bodyColors[HEAD] = Vec3f32{0.5, 0.1, 0.0}
 
+	bodyColors[RUARM] = Vec3f32{0.5, 0.3, 0.1}
+	bodyColors[LUARM] = Vec3f32{0.5, 0.3, 0.1}
+	bodyColors[LLARM] = Vec3f32{0.5, 0.3, 0.3}
+	bodyColors[RLARM] = Vec3f32{0.5, 0.3, 0.3}
+
+	bodyColors[RULEG] = Vec3f32{0.2, 0.5, 0.1}
+	bodyColors[LULEG] = Vec3f32{0.2, 0.5, 0.1}
+	bodyColors[LLLEG] = Vec3f32{0.2, 0.5, 0.3}
+	bodyColors[RLLEG] = Vec3f32{0.2, 0.5, 0.3}
+
 	return bodyColors
+}
+
+func SetToZero() [10]BodyConfig {
+	var bodyConfig [10]BodyConfig
+	for x := 0; x < 10; x++ {
+		bodyConfig[x] = BodyConfig{
+			size: Vec3f32{0, 0, 0},
+			rotation: Vec3f32{0, 0, 0},
+		}
+	}
+	return bodyConfig
 }
 
 func HumanDefaultConfig() [10]BodyConfig {
@@ -148,7 +177,8 @@ func HumanDefaultConfig() [10]BodyConfig {
 	bodyConfig[TORSO].size.x = 4.0
 	bodyConfig[TORSO].size.y = 6.0
 	bodyConfig[TORSO].size.z = 2.0
-	
+	bodyConfig[TORSO].rotation.y = mat4.DegToRad(60)
+
 	// Arms 
 	bodyConfig[RUARM].size.y = 4.0
 	bodyConfig[RLARM].size.y = 2.0
@@ -160,6 +190,8 @@ func HumanDefaultConfig() [10]BodyConfig {
 
 	// Legs
 	bodyConfig[RULEG].rotation.x = mat4.DegToRad(180)
+	// bodyConfig[RLLEG].rotation.x = mat4.DegToRad(-30)
+
 	bodyConfig[RULEG].size.x = 1.0
 	bodyConfig[RULEG].size.y = 4.0
 	bodyConfig[RLLEG].size.y = 3.0
