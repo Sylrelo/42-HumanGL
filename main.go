@@ -188,14 +188,15 @@ func draw(vao uint32, window *glfw.Window, program uint32, drawData DrawData, fr
 		*frame = 0
 	}
 
+	drawData.bodyConfigTmp = SetToZero()
 	for _, keyframe := range walkingAnimation.keyframes {
-		if *frame > keyframe.start && *frame < keyframe.end {
-			fmt.Println(keyframe)
-			fmt.Println(keyframe.rotation.x / float32(keyframe.end) * float32(*frame), keyframe.rotation.x)
-			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.x = mat4.DegToRad(keyframe.rotation.x / float32(keyframe.end) * float32(*frame))
-		}
+	
 		if *frame > keyframe.start && *frame >= keyframe.end {
-			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.x = mat4.DegToRad(keyframe.rotation.x)
+			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.x += mat4.DegToRad(keyframe.rotation.x)
+		}
+		if *frame > keyframe.start && *frame < keyframe.end {
+			// fmt.Println(*frame, (*frame - keyframe.start), (keyframe.end - keyframe.start))
+			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.x += mat4.DegToRad(keyframe.rotation.x / float32((keyframe.end - keyframe.start)) * float32((*frame - keyframe.start)))
 		}
 	}
 
