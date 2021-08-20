@@ -140,6 +140,8 @@ func GenerateHuman(body [10]BodyConfig, bodyTmp [10]BodyConfig) *Node {
 		body[TORSO].rotation.y+bodyTmp[TORSO].rotation.y,
 		body[TORSO].rotation.z+bodyTmp[TORSO].rotation.z,
 	)
+	// matTorso = matTorso.Mult(mat4.Translate(0, 0, 1))
+
 	torso := Node{
 		transform: matTorso,
 		bodyPart:  TORSO,

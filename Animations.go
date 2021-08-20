@@ -8,6 +8,29 @@ func createAnimation(animation *Animation, start, end, bodyPart int, rot Vec3f32
 		end:      end,
 	})
 }
+func createAnimationTranslation(animation *AnimationTranslation, start, end int, trans Vec3f32) {
+	(*animation).keyframes = append((*animation).keyframes, AnimationDetailTranslation{
+		start:       start,
+		end:         end,
+		translation: trans,
+	})
+}
+
+func createJumpingTranslation() AnimationTranslation {
+	var animation AnimationTranslation
+	animation.duration = 500
+
+	createAnimationTranslation(&animation, 0, 40, Vec3f32{0, -220, 0})
+	createAnimationTranslation(&animation, 60, 80, Vec3f32{0, 500, 0})
+
+	// createAnimationTranslation(&animation, 80, 160, Vec3f32{0, -520, 0})
+	// createAnimationTranslation(&animation, 60, 120, Vec3f32{0, 500, 0})
+
+	//createAnimationTranslation(&animation, 120, 180, Vec3f32{0, -145, 0})
+	//createAnimationTranslation(&animation, 180, 220, Vec3f32{0, -145, 0})
+
+	return animation
+}
 
 func createJumpingAnimation() Animation {
 	var animation Animation

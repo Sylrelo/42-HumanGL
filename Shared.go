@@ -107,6 +107,7 @@ type DrawData struct {
 	uniformColor     int32
 	uniformModel     int32
 	selectedBodypart int
+	bodyTranslation  Vec3f32
 }
 
 type AnimationDetail struct {
@@ -119,4 +120,15 @@ type AnimationDetail struct {
 type Animation struct {
 	duration  float32
 	keyframes []AnimationDetail
+}
+
+type AnimationDetailTranslation struct {
+	translation Vec3f32
+	start       int
+	end         int
+}
+
+type AnimationTranslation struct {
+	duration  float32
+	keyframes []AnimationDetailTranslation
 }
