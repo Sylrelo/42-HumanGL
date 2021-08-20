@@ -119,7 +119,7 @@ func main() {
 	b := 0.0
 	c := 0.0
 
-	currentAnimation := createWalkingAnimation()
+	currentAnimation := createJumpingAnimation()
 
 	for id, keyframe := range currentAnimation.keyframes {
 		fmt.Printf("%3d [%3d  ] [%4.1d - %4.1d ] (%4.2f, %4.2f, %4.2f)\n",
@@ -145,10 +145,10 @@ func main() {
 			cameraRotation.y -= 0.1
 		}
 		if glfw.GetCurrentContext().GetKey(glfw.KeyUp) == 1 {
-			cameraRotation.x += 0.1
+			cameraRotation.x += 0.065
 		}
 		if glfw.GetCurrentContext().GetKey(glfw.KeyDown) == 1 {
-			cameraRotation.x -= 0.1
+			cameraRotation.x -= 0.065
 		}
 		if glfw.GetCurrentContext().GetKey(glfw.KeyA) == 1 {
 			cameraTranslation.x -= 0.25
@@ -205,7 +205,7 @@ func draw(vao uint32, window *glfw.Window, program uint32, drawData DrawData, fr
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	currentAnimation := createWalkingAnimation()
+	currentAnimation := createJumpingAnimation()
 
 	if *frame > int(currentAnimation.duration) {
 		*frame = 0
