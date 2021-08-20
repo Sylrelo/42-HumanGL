@@ -4,42 +4,42 @@ import mat4 "humangl/matrice"
 
 var (
 	triangle = []float32{
-		-0.5,-0.5,-0.5,
-		-0.5,-0.5, 0.5,
+		-0.5, -0.5, -0.5,
+		-0.5, -0.5, 0.5,
 		-0.5, 0.5, 0.5,
-		0.5, 0.5,-0.5, 
-		-0.5,-0.5,-0.5,
-		-0.5, 0.5,-0.5,
-		0.5,-0.5, 0.5,
-		-0.5,-0.5,-0.5,
-		0.5,-0.5,-0.5,
-		0.5, 0.5,-0.5,
-		0.5,-0.5,-0.5,
-		-0.5,-0.5,-0.5,
-		-0.5,-0.5,-0.5,
+		0.5, 0.5, -0.5,
+		-0.5, -0.5, -0.5,
+		-0.5, 0.5, -0.5,
+		0.5, -0.5, 0.5,
+		-0.5, -0.5, -0.5,
+		0.5, -0.5, -0.5,
+		0.5, 0.5, -0.5,
+		0.5, -0.5, -0.5,
+		-0.5, -0.5, -0.5,
+		-0.5, -0.5, -0.5,
 		-0.5, 0.5, 0.5,
-		-0.5, 0.5,-0.5,
-		0.5,-0.5, 0.5,
-		-0.5,-0.5, 0.5,
-		-0.5,-0.5,-0.5,
+		-0.5, 0.5, -0.5,
+		0.5, -0.5, 0.5,
+		-0.5, -0.5, 0.5,
+		-0.5, -0.5, -0.5,
 		-0.5, 0.5, 0.5,
-		-0.5,-0.5, 0.5,
-		0.5,-0.5, 0.5,
+		-0.5, -0.5, 0.5,
+		0.5, -0.5, 0.5,
 		0.5, 0.5, 0.5,
-		0.5,-0.5,-0.5,
-		0.5, 0.5,-0.5,
-		0.5,-0.5,-0.5,
+		0.5, -0.5, -0.5,
+		0.5, 0.5, -0.5,
+		0.5, -0.5, -0.5,
 		0.5, 0.5, 0.5,
-		0.5,-0.5, 0.5,
+		0.5, -0.5, 0.5,
 		0.5, 0.5, 0.5,
-		0.5, 0.5,-0.5,
-		-0.5, 0.5,-0.5,
+		0.5, 0.5, -0.5,
+		-0.5, 0.5, -0.5,
 		0.5, 0.5, 0.5,
-		-0.5, 0.5,-0.5,
+		-0.5, 0.5, -0.5,
 		-0.5, 0.5, 0.5,
 		0.5, 0.5, 0.5,
 		-0.5, 0.5, 0.5,
-		0.5,-0.5, 0.5,
+		0.5, -0.5, 0.5,
 	}
 )
 
@@ -63,33 +63,33 @@ type Vec3f32 struct {
 }
 
 type BodyConfig struct {
-	size Vec3f32
+	size     Vec3f32
 	rotation Vec3f32
 }
 
 type Node struct {
 	transform mat4.Mat4
-	children []Node
-	bodyPart int
+	children  []Node
+	bodyPart  int
 }
 
 type DrawData struct {
-	bodyConfig [10]BodyConfig
+	bodyConfig    [10]BodyConfig
 	bodyConfigTmp [10]BodyConfig
-	bodyColors [10]Vec3f32
-	uniformColor int32
-	uniformModel int32
-	animation Animation
+	bodyColors    [10]Vec3f32
+	uniformColor  int32
+	uniformModel  int32
+	animation     Animation
 }
-
 
 type AnimationDetail struct {
 	rotation Vec3f32
 	BodyPart int
-	start int
-	end int
+	start    int
+	end      int
 }
+
 type Animation struct {
-	duration float32
+	duration  float32
 	keyframes []AnimationDetail
 }

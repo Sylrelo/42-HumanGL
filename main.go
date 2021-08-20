@@ -42,7 +42,7 @@ const (
 )
 
 func translateBackBodypart(modelMat mat4.Mat4, bodyConfig BodyConfig) mat4.Mat4 {
-	instanceMat := modelMat.Mult(mat4.Translate(0, bodyConfig.size.y * 0.5, 0))
+	instanceMat := modelMat.Mult(mat4.Translate(0, bodyConfig.size.y*0.5, 0))
 	instanceMat = instanceMat.Mult(mat4.Scale(bodyConfig.size.x, bodyConfig.size.y, bodyConfig.size.z))
 	return instanceMat
 }
@@ -55,7 +55,7 @@ func iterateChildrens(drawData DrawData, node *Node, matModel mat4.Mat4) {
 	matModel = matModel.Mult(node.transform)
 
 	if node.bodyPart == TORSO {
-		matInstance = matModel.Mult(mat4.Translate(0, drawData.bodyConfig[TORSO].size.y * 0.5, drawData.bodyConfig[TORSO].size.z * 0.5))
+		matInstance = matModel.Mult(mat4.Translate(0, drawData.bodyConfig[TORSO].size.y*0.5, drawData.bodyConfig[TORSO].size.z*0.5))
 		matInstance = matInstance.Mult(mat4.Scale(drawData.bodyConfig[TORSO].size.x, drawData.bodyConfig[TORSO].size.y, drawData.bodyConfig[TORSO].size.z))
 	} else {
 		matInstance = translateBackBodypart(matModel, drawData.bodyConfig[node.bodyPart])
@@ -63,7 +63,7 @@ func iterateChildrens(drawData DrawData, node *Node, matModel mat4.Mat4) {
 
 	gl.UniformMatrix4fv(drawData.uniformModel, 1, false, &matInstance[0][0])
 	gl.Uniform3f(drawData.uniformColor, drawData.bodyColors[node.bodyPart].x, drawData.bodyColors[node.bodyPart].y, drawData.bodyColors[node.bodyPart].z)
-	
+
 	gl.DrawArrays(gl.TRIANGLES, 0, 36)
 	if node.children != nil {
 		for child := range node.children {
@@ -81,7 +81,6 @@ func main() {
 	defer glfw.Terminate()
 	program := initOpenGL()
 
-
 	glBuffer := triangle
 	gl.GenBuffers(1, &vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
@@ -96,33 +95,34 @@ func main() {
 	gl.Enable(gl.CULL_FACE)
 	gl.Enable(gl.DEPTH_TEST)
 
-
 	matProjUniform := gl.GetUniformLocation(program, gl.Str("matProjection\x00"))
 	matCameraUniform := gl.GetUniformLocation(program, gl.Str("matCamera\x00"))
 
-	matCamera := mgl32.Translate3D(0, -2, -20)	
-	matProj := mat4.Perspective(mgl32.DegToRad(60), float32(width) / float32(height), 0.1, 1000)
+	cameraRotation := Vec3f32{0, 0, 0}
+	cameraTranslation := Vec3f32{0, 0, 0}
+
+	// matCamera := mgl32.Translate3D(0, -2, -20)
+	matProj := mat4.Perspective(mgl32.DegToRad(60), float32(width)/float32(height), 0.1, 1000)
 	gl.UniformMatrix4fv(matProjUniform, 1, false, &matProj[0][0])
 
 	var drawData DrawData
 
 	drawData.bodyColors = HumanDefaultColor()
-	
+
 	drawData.bodyConfig = HumanDefaultConfig()
 	drawData.bodyConfigTmp = SetToZero()
 
 	drawData.uniformColor = gl.GetUniformLocation(program, gl.Str("partColor\x00"))
 	drawData.uniformModel = gl.GetUniformLocation(program, gl.Str("matModel\x00"))
 
-
 	a := 0.0
 	b := 0.0
 	c := 0.0
 
-	walkingAnimation := createWalkinAnimation()
+	currentAnimation := createWalkingAnimation()
 
-	for id, keyframe := range walkingAnimation.keyframes {
-		fmt.Printf("%3d [%3d  ] [%4.1f - %4.1f ] (%4.2f, %4.2f, %4.2f)\n",
+	for id, keyframe := range currentAnimation.keyframes {
+		fmt.Printf("%3d [%3d  ] [%4.1d - %4.1d ] (%4.2f, %4.2f, %4.2f)\n",
 			id,
 			keyframe.BodyPart,
 			keyframe.start,
@@ -132,19 +132,41 @@ func main() {
 			keyframe.rotation.z,
 		)
 	}
-	gl.UniformMatrix4fv(matCameraUniform, 1, false, &matCamera[0])
 
 	frameNumber := 0
+	//drawData.bodyConfig[LULEG].rotation = Vec3f32{-15, 0, 0}
+	//drawData.bodyConfig[LLLEG].rotation = Vec3f32{-45, 0, 0}
+
 	for !window.ShouldClose() {
+		if glfw.GetCurrentContext().GetKey(glfw.KeyLeft) == 1 {
+			cameraRotation.y += 0.1
+		}
+		if glfw.GetCurrentContext().GetKey(glfw.KeyRight) == 1 {
+			cameraRotation.y -= 0.1
+		}
+		if glfw.GetCurrentContext().GetKey(glfw.KeyUp) == 1 {
+			cameraRotation.x += 0.1
+		}
+		if glfw.GetCurrentContext().GetKey(glfw.KeyDown) == 1 {
+			cameraRotation.x -= 0.1
+		}
+		if glfw.GetCurrentContext().GetKey(glfw.KeyA) == 1 {
+			cameraTranslation.x -= 0.25
+		}
+		if glfw.GetCurrentContext().GetKey(glfw.KeyD) == 1 {
+			cameraTranslation.x += 0.1
+		}
+
+		matCamera := mat4.Translate(cameraTranslation.x, -2, -20).Mult(mat4.Rotation(cameraRotation.x, cameraRotation.y, cameraRotation.z))
+		gl.UniformMatrix4fv(matCameraUniform, 1, false, &matCamera[0][0])
 
 		// bodyConfig[TORSO].rotation.y = float32(math.Cos(a))
 		// bodyConfig[TORSO].size.x = 2 + float32(math.Abs(float64(float32(math.Cos(a) * 8))))
-		
+
 		// bodyConfig[RUARM].rotation.x =  float32(math.Cos(b))
 		// bodyConfig[RLARM].rotation.x =  float32(math.Cos(c))
 		// bodyConfig[LUARM].rotation.x =  -float32(math.Cos(b))
 		// bodyConfig[LLARM].rotation.x =  -float32(math.Cos(c))
-	
 
 		draw(vao, window, program, drawData, &frameNumber)
 
@@ -182,24 +204,26 @@ func draw(vao uint32, window *glfw.Window, program uint32, drawData DrawData, fr
 	}
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	
-	walkingAnimation := createWalkinAnimation()
-	if *frame > int(walkingAnimation.duration) {
+
+	currentAnimation := createWalkingAnimation()
+
+	if *frame > int(currentAnimation.duration) {
 		*frame = 0
 	}
-
 	drawData.bodyConfigTmp = SetToZero()
-	for _, keyframe := range walkingAnimation.keyframes {
-	
-		if *frame > keyframe.start && *frame >= keyframe.end {
+	for _, keyframe := range currentAnimation.keyframes {
+
+		if *frame >= keyframe.start && *frame >= keyframe.end {
 			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.x += mat4.DegToRad(keyframe.rotation.x)
+			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.y += mat4.DegToRad(keyframe.rotation.y)
+			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.z += mat4.DegToRad(keyframe.rotation.z)
 		}
-		if *frame > keyframe.start && *frame < keyframe.end {
-			// fmt.Println(*frame, (*frame - keyframe.start), (keyframe.end - keyframe.start))
+		if *frame >= keyframe.start && *frame < keyframe.end {
 			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.x += mat4.DegToRad(keyframe.rotation.x / float32((keyframe.end - keyframe.start)) * float32((*frame - keyframe.start)))
+			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.y += mat4.DegToRad(keyframe.rotation.y / float32((keyframe.end - keyframe.start)) * float32((*frame - keyframe.start)))
+			drawData.bodyConfigTmp[keyframe.BodyPart].rotation.z += mat4.DegToRad(keyframe.rotation.z / float32((keyframe.end - keyframe.start)) * float32((*frame - keyframe.start)))
 		}
 	}
-
 
 	humanBody := GenerateHuman(drawData.bodyConfig, drawData.bodyConfigTmp)
 
