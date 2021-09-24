@@ -20,7 +20,10 @@ func createJumpingTranslation() AnimationTranslation {
 	var animation AnimationTranslation
 	animation.duration = 500
 
+	// Ça fonctionne vaguement comme le createXAnimation
+	// 							variable, 	start, 	end,	valeur (x, 	  y, z)
 	createAnimationTranslation(&animation, 0, 40, Vec3f32{0, -220, 0})
+
 	createAnimationTranslation(&animation, 60, 80, Vec3f32{0, 500, 0})
 
 	// createAnimationTranslation(&animation, 80, 160, Vec3f32{0, -520, 0})

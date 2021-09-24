@@ -54,6 +54,14 @@ func init() {
 	runtime.LockOSThread()
 }
 
+func resetData(drawData *DrawData, frameNumber, translateFrame *int) {
+	*frameNumber = 0
+	*translateFrame = 0
+	drawData.bodyConfig = HumanDefaultConfig()
+	drawData.selectedBodypart = -1
+	drawData.bodyTranslation = Vec3f32{0, 0, 0}
+}
+
 func main() {
 	var vao uint32
 	var vbo uint32
@@ -74,7 +82,7 @@ func main() {
 	drawData.bodyColors = HumanDefaultColor()
 	drawData.bodyConfigTmp = SetToZero()
 	drawData.bodyTranslation = Vec3f32{0, 0, 0}
-	testPwet := 0
+	translateFrame := 0
 	animationType := -1
 
 	gl.GenBuffers(1, &vbo)
@@ -133,37 +141,25 @@ func main() {
 		if glfw.GetCurrentContext().GetKey(glfw.Key2) == 1 {
 			currentAnimation = createWalkingAnimation()
 			animationType = 2
-			frameNumber = 0
-			drawData.bodyConfig = defaultHumanConfig
-			drawData.selectedBodypart = -1
-			drawData.bodyTranslation = Vec3f32{0, 0, 0}
+			resetData(&drawData, &frameNumber, &translateFrame)
 
 		}
 		if glfw.GetCurrentContext().GetKey(glfw.Key3) == 1 {
 			currentAnimation = createJumpingAnimation()
 			animationType = 3
-			frameNumber = 0
-			drawData.bodyConfig = defaultHumanConfig
-			drawData.selectedBodypart = -1
-			drawData.bodyTranslation = Vec3f32{0, 0, 0}
+			resetData(&drawData, &frameNumber, &translateFrame)
 
 		}
 		if glfw.GetCurrentContext().GetKey(glfw.Key4) == 1 {
 			currentAnimation = createDabAnimation()
 			animationType = -1
-			frameNumber = 0
-			drawData.bodyConfig = defaultHumanConfig
-			drawData.selectedBodypart = -1
-			drawData.bodyTranslation = Vec3f32{0, 0, 0}
+			resetData(&drawData, &frameNumber, &translateFrame)
 
 		}
 		if glfw.GetCurrentContext().GetKey(glfw.Key5) == 1 {
 			currentAnimation = createFuckUAnimation()
 			animationType = -1
-			frameNumber = 0
-			drawData.bodyConfig = defaultHumanConfig
-			drawData.selectedBodypart = -1
-			drawData.bodyTranslation = Vec3f32{0, 0, 0}
+			resetData(&drawData, &frameNumber, &translateFrame)
 
 		}
 
@@ -197,7 +193,7 @@ func main() {
 		}
 		matCamera := mat4.Translate(cameraTranslation.x, -2, cameraTranslation.z).Mult(mat4.Rotation(cameraRotation.x, cameraRotation.y, cameraRotation.z))
 		gl.UniformMatrix4fv(matCameraUniform, 1, false, &matCamera[0][0])
-		handleDrawHuman(drawData, &frameNumber, currentAnimation, &testPwet, animationType)
+		handleDrawHuman(drawData, &frameNumber, currentAnimation, &translateFrame, animationType)
 		_ = animationType
 		glfw.PollEvents()
 		window.SwapBuffers()
@@ -207,7 +203,7 @@ func main() {
 	}
 }
 
-func handleDrawHuman(drawData DrawData, frame *int, currentAnimation Animation, testPwet *int, animationType int) {
+func handleDrawHuman(drawData DrawData, frame *int, currentAnimation Animation, translateFrame *int, animationType int) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	drawData.bodyConfigTmp = SetToZero()
 	if *frame > int(currentAnimation.duration) {
@@ -228,8 +224,8 @@ func handleDrawHuman(drawData DrawData, frame *int, currentAnimation Animation, 
 	}
 
 	if animationType == 2 {
-		drawData.bodyTranslation = Vec3f32{0, 0, float32(*testPwet) * .05} //mat4.Translate(0, 0, float32(*testPwet)*.05)
-		(*testPwet)++
+		drawData.bodyTranslation = Vec3f32{0, 0, float32(*translateFrame) * .05} //mat4.Translate(0, 0, float32(*translateFrame)*.05)
+		(*translateFrame)++
 	} else if animationType == 3 {
 		currentTranslationAnimation := createJumpingTranslation()
 		for _, keyframe := range currentTranslationAnimation.keyframes {
