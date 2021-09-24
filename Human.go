@@ -205,7 +205,6 @@ func HumanDefaultConfig() [10]BodyConfig {
 	bodyConfig[TORSO].rotation.x = mat4.DegToRad(0)
 
 	// Arms
-
 	bodyConfig[RUARM].size = Vec3f32{1, 4, 1}
 	bodyConfig[RLARM].size = Vec3f32{0.8, 4.5, 0.8}
 
@@ -219,8 +218,6 @@ func HumanDefaultConfig() [10]BodyConfig {
 
 	// Legs
 	bodyConfig[RULEG].rotation.x = mat4.DegToRad(180)
-	// bodyConfig[RLLEG].rotation.x = mat4.DegToRad(-30)
-
 	bodyConfig[RULEG].size.x = 1.0
 	bodyConfig[RULEG].size.y = 4.0
 	bodyConfig[RLLEG].size.y = 3.0

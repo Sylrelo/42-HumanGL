@@ -14,6 +14,10 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+func init() {
+	runtime.LockOSThread()
+}
+
 func translateBackBodypart(modelMat mat4.Mat4, bodyConfig BodyConfig) mat4.Mat4 {
 	instanceMat := modelMat.Mult(mat4.Translate(0, bodyConfig.size.y*0.5, 0))
 	instanceMat = instanceMat.Mult(mat4.Scale(bodyConfig.size.x, bodyConfig.size.y, bodyConfig.size.z))
@@ -48,10 +52,6 @@ func iterateChildrens(drawData DrawData, node *Node, matModel mat4.Mat4) {
 			iterateChildrens(drawData, &node.children[child], matModel)
 		}
 	}
-}
-
-func init() {
-	runtime.LockOSThread()
 }
 
 func resetData(drawData *DrawData, frameNumber, translateFrame *int) {
@@ -133,9 +133,7 @@ func main() {
 		if glfw.GetCurrentContext().GetKey(glfw.Key1) == 1 {
 			currentAnimation = Animation{}
 			frameNumber = 0
-			drawData.bodyConfig = defaultHumanConfig
-			drawData.selectedBodypart = -1
-			drawData.bodyTranslation = Vec3f32{0, 0, 0}
+			resetData(&drawData, &frameNumber, &translateFrame)
 
 		}
 		if glfw.GetCurrentContext().GetKey(glfw.Key2) == 1 {
@@ -160,7 +158,6 @@ func main() {
 			currentAnimation = createFuckUAnimation()
 			animationType = -1
 			resetData(&drawData, &frameNumber, &translateFrame)
-
 		}
 
 		if glfw.GetCurrentContext().GetKey(glfw.KeyP) == 1 && time.Since(keyTimeout).Milliseconds() > 120 {
@@ -170,6 +167,7 @@ func main() {
 			}
 			keyTimeout = time.Now()
 		}
+
 		if glfw.GetCurrentContext().GetKey(glfw.KeyKPAdd) == 1 && drawData.selectedBodypart >= 0 {
 			drawData.bodyConfig[drawData.selectedBodypart].size.x += 0.1
 			drawData.bodyConfig[drawData.selectedBodypart].size.y += 0.1
@@ -194,7 +192,6 @@ func main() {
 		matCamera := mat4.Translate(cameraTranslation.x, -2, cameraTranslation.z).Mult(mat4.Rotation(cameraRotation.x, cameraRotation.y, cameraRotation.z))
 		gl.UniformMatrix4fv(matCameraUniform, 1, false, &matCamera[0][0])
 		handleDrawHuman(drawData, &frameNumber, currentAnimation, &translateFrame, animationType)
-		_ = animationType
 		glfw.PollEvents()
 		window.SwapBuffers()
 		if diff := time.Since(start).Milliseconds() - 16; diff > 0 {
@@ -224,7 +221,7 @@ func handleDrawHuman(drawData DrawData, frame *int, currentAnimation Animation, 
 	}
 
 	if animationType == 2 {
-		drawData.bodyTranslation = Vec3f32{0, 0, float32(*translateFrame) * .05} //mat4.Translate(0, 0, float32(*translateFrame)*.05)
+		drawData.bodyTranslation = Vec3f32{0, 0, float32(*translateFrame) * .05}
 		(*translateFrame)++
 	} else if animationType == 3 {
 		currentTranslationAnimation := createJumpingTranslation()
@@ -240,10 +237,7 @@ func handleDrawHuman(drawData DrawData, frame *int, currentAnimation Animation, 
 				drawData.bodyTranslation.z += mat4.DegToRad(keyframe.translation.z / float32((keyframe.end - keyframe.start)) * float32((*frame - keyframe.start)))
 			}
 		}
-
-		// drawData.bodyTranslation = mat4.Translate(0, 0, float32(*testPwet)*.05)
 	}
-
 	humanBody := GenerateHuman(drawData.bodyConfig, drawData.bodyConfigTmp)
 	iterateChildrens(drawData, humanBody, mat4.Identity())
 	(*frame)++
