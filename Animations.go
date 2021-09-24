@@ -24,7 +24,11 @@ func createJumpingTranslation() AnimationTranslation {
 	// 							variable, 	start, 	end,	valeur (x, 	  y, z)
 	createAnimationTranslation(&animation, 0, 40, Vec3f32{0, -220, 0})
 
-	createAnimationTranslation(&animation, 60, 80, Vec3f32{0, 500, 0})
+	createAnimationTranslation(&animation, 60, 120, Vec3f32{0, 500, 0})
+
+	createAnimationTranslation(&animation, 140, 180, Vec3f32{0, -500, 0})
+
+	createAnimationTranslation(&animation, 180, 220, Vec3f32{0, 220, 0})
 
 	// createAnimationTranslation(&animation, 80, 160, Vec3f32{0, -520, 0})
 	// createAnimationTranslation(&animation, 60, 120, Vec3f32{0, 500, 0})
@@ -141,17 +145,6 @@ func createJumpingAnimation() Animation {
 
 	createAnimation(&animation, 180, 220, RLARM, Vec3f32{-45, 0, 0})
 	createAnimation(&animation, 180, 220, LLARM, Vec3f32{-45, 0, 0})
-
-	// dab \\
-	createAnimation(&animation, 230, 245, LUARM, Vec3f32{75, 75, 0})
-	createAnimation(&animation, 230, 245, LLARM, Vec3f32{90, 90, 65})
-	createAnimation(&animation, 230, 245, RUARM, Vec3f32{105, -105, 0})
-	createAnimation(&animation, 230, 245, HEAD, Vec3f32{-35, 45, 0})
-
-	createAnimation(&animation, 300, 360, LUARM, Vec3f32{-75, -75, 0})
-	createAnimation(&animation, 300, 360, LLARM, Vec3f32{-90, -90, -65})
-	createAnimation(&animation, 300, 360, RUARM, Vec3f32{-105, 105, 0})
-	createAnimation(&animation, 300, 360, HEAD, Vec3f32{35, -45, 0})
 
 	//createAnimation(&animation, 60, 160, TORSO, Vec3f32{360, 0, 0})
 
