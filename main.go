@@ -133,6 +133,7 @@ func main() {
 		if glfw.GetCurrentContext().GetKey(glfw.Key1) == 1 {
 			currentAnimation = Animation{}
 			frameNumber = 0
+			animationType = -1
 			resetData(&drawData, &frameNumber, &translateFrame)
 
 		}
